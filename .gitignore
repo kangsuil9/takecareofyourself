@@ -1,0 +1,22 @@
+# dependencies
+/node_modules
+/.pnpm-store
+/.pnpm-data
+/.pnpm-state
+
+# next.js
+/.next/
+/out/
+
+# production
+/build
+
+# environment files
+.env*
+!.env.example
+
+# local files
+.DS_Store
+*.pem
+*.tsbuildinfo
+next-env.d.ts
