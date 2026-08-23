@@ -165,3 +165,24 @@ button { color: inherit; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; }
 }
+
+.auth-frame { min-height: 100dvh; max-width: 480px; margin: 0 auto; display: grid; place-items: center; padding: 32px 24px; background: var(--surface); }
+.login-panel, .onboarding-panel { width: 100%; }
+.login-panel { text-align: center; }
+.login-symbol { width: 76px; height: 76px; margin: 0 auto 28px; border-radius: 50%; background: var(--green-soft); position: relative; }
+.login-symbol span { position: absolute; width: 19px; height: 35px; border-radius: 100% 0 100% 0; background: var(--green); left: 31px; top: 19px; transform: rotate(25deg); }
+.login-panel h1 { margin: 8px 0 17px; font-family: Georgia, "Noto Serif KR", serif; font-size: 38px; letter-spacing: -.05em; }
+.login-panel > p:not(.form-error), .onboarding-panel > p { margin: 0; color: #6f7971; font-size: 14px; line-height: 1.8; }
+.login-action { margin-top: 48px; }
+.kakao-button { width: 100%; height: 55px; display: flex; align-items: center; justify-content: center; gap: 10px; border: 0; border-radius: 15px; background: #fee500; color: #191600; font-weight: 700; cursor: pointer; }
+.kakao-button span { font-family: Arial, sans-serif; font-size: 18px; font-weight: 900; }
+.kakao-button:disabled, .primary-button:disabled { cursor: wait; opacity: .7; }
+.login-panel small { display: block; max-width: 320px; margin: 20px auto 0; color: #9aa09b; font-size: 10px; line-height: 1.6; }
+.form-error { margin: 14px 0 0; color: #a44f48; font-size: 12px; line-height: 1.55; }
+.onboarding-panel > h1 { margin: 11px 0 17px; font-family: Georgia, "Noto Serif KR", serif; font-size: 28px; line-height: 1.5; letter-spacing: -.045em; }
+.nickname-form { margin-top: 45px; }
+.nickname-form label { display: block; margin-bottom: 9px; font-size: 13px; font-weight: 700; }
+.nickname-form input { width: 100%; height: 55px; padding: 0 16px; border: 1px solid var(--line); border-radius: 15px; background: var(--paper); color: var(--ink); outline: none; }
+.nickname-form input:focus { border-color: #96a899; box-shadow: 0 0 0 3px rgba(82, 107, 91, .08); }
+.nickname-form > p:not(.form-error) { margin: 9px 2px 28px; color: #8c948e; font-size: 11px; }
+.nickname-form .form-error { margin: -16px 2px 20px; }
