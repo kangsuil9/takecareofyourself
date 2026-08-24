@@ -2,6 +2,8 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { CareLogActions } from "@/components/care-log-actions";
+import { CareLogImage } from "@/components/care-log-image";
+import { createCareImageSignedUrl } from "@/lib/care-logs/images";
 import { requireCareLogOwner } from "@/lib/care-logs/server";
 import { createClient } from "@/lib/supabase/server";
 
@@ -27,10 +29,11 @@ function getFeedback(params: Awaited<Props["searchParams"]>) {
 export default async function CarePage({ searchParams }: Props) {
   const [profile, params] = await Promise.all([requireCareLogOwner(), searchParams]);
   const supabase = await createClient();
-  const { data: careLogs, error } = await supabase.from("care_logs").select("id, user_id, category, content, created_at, updated_at").is("deleted_at", null).order("created_at", { ascending: false });
+  const { data: careLogs, error } = await supabase.from("care_logs").select("id, user_id, category, content, image_url, created_at, updated_at").is("deleted_at", null).order("created_at", { ascending: false });
   const profileIds = [...new Set((careLogs ?? []).map((careLog) => careLog.user_id))];
   const { data: feedProfiles } = profileIds.length ? await supabase.rpc("get_feed_profiles", { profile_ids: profileIds }) : { data: [] };
   const nicknames = new Map((feedProfiles ?? []).map((item) => [item.id, item.nickname]));
+  const imageUrls = new Map(await Promise.all((careLogs ?? []).filter((item) => item.image_url).map(async (item) => [item.id, await createCareImageSignedUrl(supabase, item.image_url)] as const)));
   const feedback = getFeedback(params);
 
   return (
@@ -52,6 +55,7 @@ export default async function CarePage({ searchParams }: Props) {
               return <article className="feed-card" key={post.id}>
                 <header className="feed-author"><div className="avatar" aria-hidden="true">{nickname.slice(0, 1)}</div><div><strong>{nickname}</strong><span>{formatCareLogTime(post.created_at)}</span></div>{post.category ? <span className="category-chip">{post.category}</span> : null}{post.user_id === profile.id ? <CareLogActions careLogId={post.id} /> : null}</header>
                 <p>{post.content}</p>
+                {imageUrls.get(post.id) ? <CareLogImage src={imageUrls.get(post.id)!} /> : null}
               </article>;
             })}
           </div>
