@@ -3,7 +3,7 @@ import { ArrowRight, CalendarDays } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { MyCareLogList, type MyCareLogItem } from "@/components/my-care-log-list";
 import { createCareImageSignedUrl } from "@/lib/care-logs/images";
-import { getCategoryCounts, getReflectionRange, type ReflectionPeriod } from "@/lib/care-logs/reflection";
+import { getCategoryCounts, getReflectionPeriodDisplay, getReflectionRange, type ReflectionPeriod } from "@/lib/care-logs/reflection";
 import { requireCareLogOwner } from "@/lib/care-logs/server";
 import { createClient } from "@/lib/supabase/server";
 
@@ -13,6 +13,7 @@ export default async function MePage({ searchParams }: Props) {
   const [profile, params] = await Promise.all([requireCareLogOwner(), searchParams]);
   const period: ReflectionPeriod = params.period === "month" ? "month" : "week";
   const range = getReflectionRange(period);
+  const periodDisplay = getReflectionPeriodDisplay(period, range);
   const supabase = await createClient();
   const { data, error } = await supabase.from("care_logs").select("id, category, content, image_url, created_at").eq("user_id", profile.id).is("deleted_at", null).gte("created_at", range.start.toISOString()).lte("created_at", range.end.toISOString()).order("created_at", { ascending: false });
   const careLogs = data ?? [];
@@ -26,6 +27,10 @@ export default async function MePage({ searchParams }: Props) {
       <Link href="/me?period=week" className={period === "week" ? "active" : ""} aria-current={period === "week" ? "page" : undefined}>이번 주</Link>
       <Link href="/me?period=month" className={period === "month" ? "active" : ""} aria-current={period === "month" ? "page" : undefined}>이번 달</Link>
     </nav>
+    <div className="reflection-period" aria-live="polite">
+      <strong>{periodDisplay.dateRange}</strong>
+      <span>{periodDisplay.detail}</span>
+    </div>
     <section className="reflection-section" aria-labelledby="reflection-title">
       <div className="section-heading"><div><span className="eyebrow">REFLECTION</span><h2 id="reflection-title">{range.label}의 나</h2></div><CalendarDays size={21} aria-hidden="true" /></div>
       {error ? <div className="reflection-empty"><p>돌봄 기록을 불러오지 못했어요.<br />잠시 후 다시 확인해주세요.</p></div> : <div className="reflection-summary">

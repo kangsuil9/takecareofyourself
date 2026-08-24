@@ -24,11 +24,36 @@ function localMidnightToUtc(year: number, month: number, day: number, timeZone: 
 
 export function getReflectionRange(period: ReflectionPeriod, now = new Date(), timeZone = DEFAULT_REFLECTION_TIME_ZONE) {
   const local = getZonedDateParts(now, timeZone);
-  if (period === "month") return { start: localMidnightToUtc(local.year, local.month, 1, timeZone), end: now, label: "이번 달" };
+  if (period === "month") {
+    const lastDay = new Date(Date.UTC(local.year, local.month, 0)).getUTCDate();
+    return {
+      start: localMidnightToUtc(local.year, local.month, 1, timeZone),
+      end: now,
+      displayEnd: localMidnightToUtc(local.year, local.month, lastDay, timeZone),
+      label: "이번 달",
+    };
+  }
   const localDate = new Date(Date.UTC(local.year, local.month - 1, local.day));
   const daysSinceMonday = (localDate.getUTCDay() + 6) % 7;
   localDate.setUTCDate(localDate.getUTCDate() - daysSinceMonday);
-  return { start: localMidnightToUtc(localDate.getUTCFullYear(), localDate.getUTCMonth() + 1, localDate.getUTCDate(), timeZone), end: now, label: "이번 주" };
+  const weekEnd = new Date(localDate);
+  weekEnd.setUTCDate(weekEnd.getUTCDate() + 6);
+  return {
+    start: localMidnightToUtc(localDate.getUTCFullYear(), localDate.getUTCMonth() + 1, localDate.getUTCDate(), timeZone),
+    end: now,
+    displayEnd: localMidnightToUtc(weekEnd.getUTCFullYear(), weekEnd.getUTCMonth() + 1, weekEnd.getUTCDate(), timeZone),
+    label: "이번 주",
+  };
+}
+
+export function getReflectionPeriodDisplay(period: ReflectionPeriod, range: ReturnType<typeof getReflectionRange>, timeZone = DEFAULT_REFLECTION_TIME_ZONE) {
+  const formatDate = (date: Date) => new Intl.DateTimeFormat("ko-KR", { timeZone, month: "long", day: "numeric" }).format(date);
+  const start = getZonedDateParts(range.start, timeZone);
+
+  return {
+    dateRange: `${formatDate(range.start)} — ${formatDate(range.displayEnd)}`,
+    detail: period === "week" ? `${start.month}월 ${Math.floor((start.day - 1) / 7) + 1}주차` : `${start.year}년 ${start.month}월`,
+  };
 }
 
 export function getCategoryCounts(careLogs: CareLogForReflection[]) {

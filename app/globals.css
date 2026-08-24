@@ -150,6 +150,10 @@ button { color: inherit; }
 .reflection-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin: 0 0 30px; padding: 5px; border-radius: 14px; background: #e9e8e1; }
 .reflection-tabs a { min-height: 42px; display: grid; place-items: center; border-radius: 10px; color: #858c86; font-size: 13px; }
 .reflection-tabs a.active { background: var(--paper); color: var(--green); font-weight: 700; box-shadow: 0 2px 10px rgba(49, 57, 51, .06); }
+.reflection-period { margin: -13px 2px 27px; }
+.reflection-period strong, .reflection-period span { display: block; }
+.reflection-period strong { font-family: Georgia, "Noto Serif KR", serif; font-size: 18px; font-weight: 600; letter-spacing: -.025em; }
+.reflection-period span { margin-top: 5px; color: var(--muted); font-size: 11px; }
 .reflection-summary { overflow: hidden; border: 1px solid var(--line); border-radius: 20px; background: var(--paper); }
 .reflection-total { display: flex; align-items: baseline; gap: 7px; padding: 23px 21px 20px; background: #e7ede5; }
 .reflection-total strong { color: var(--green); font-family: Georgia, serif; font-size: 36px; }
