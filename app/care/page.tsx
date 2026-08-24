@@ -3,6 +3,7 @@ import { ArrowRight } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { CareLogActions } from "@/components/care-log-actions";
 import { CareLogImage } from "@/components/care-log-image";
+import { CareLikeButton } from "@/components/care-like-button";
 import { createCareImageSignedUrl } from "@/lib/care-logs/images";
 import { requireCareLogOwner } from "@/lib/care-logs/server";
 import { createClient } from "@/lib/supabase/server";
@@ -31,8 +32,16 @@ export default async function CarePage({ searchParams }: Props) {
   const supabase = await createClient();
   const { data: careLogs, error } = await supabase.from("care_logs").select("id, user_id, category, content, image_url, created_at, updated_at").is("deleted_at", null).order("created_at", { ascending: false });
   const profileIds = [...new Set((careLogs ?? []).map((careLog) => careLog.user_id))];
+  const careLogIds = (careLogs ?? []).map((careLog) => careLog.id);
   const { data: feedProfiles } = profileIds.length ? await supabase.rpc("get_feed_profiles", { profile_ids: profileIds }) : { data: [] };
+  const { data: likes } = careLogIds.length ? await supabase.from("likes").select("care_log_id, user_id").in("care_log_id", careLogIds) : { data: [] };
   const nicknames = new Map((feedProfiles ?? []).map((item) => [item.id, item.nickname]));
+  const likeCounts = new Map<string, number>();
+  const likedCareLogIds = new Set<string>();
+  for (const like of likes ?? []) {
+    likeCounts.set(like.care_log_id, (likeCounts.get(like.care_log_id) ?? 0) + 1);
+    if (like.user_id === profile.id) likedCareLogIds.add(like.care_log_id);
+  }
   const imageUrls = new Map(await Promise.all((careLogs ?? []).filter((item) => item.image_url).map(async (item) => [item.id, await createCareImageSignedUrl(supabase, item.image_url)] as const)));
   const feedback = getFeedback(params);
 
@@ -56,6 +65,7 @@ export default async function CarePage({ searchParams }: Props) {
                 <header className="feed-author"><div className="avatar" aria-hidden="true">{nickname.slice(0, 1)}</div><div><strong>{nickname}</strong><span>{formatCareLogTime(post.created_at)}</span></div>{post.category ? <span className="category-chip">{post.category}</span> : null}{post.user_id === profile.id ? <CareLogActions careLogId={post.id} /> : null}</header>
                 <p>{post.content}</p>
                 {imageUrls.get(post.id) ? <CareLogImage src={imageUrls.get(post.id)!} /> : null}
+                <CareLikeButton careLogId={post.id} initialCount={likeCounts.get(post.id) ?? 0} initialLiked={likedCareLogIds.has(post.id)} />
               </article>;
             })}
           </div>

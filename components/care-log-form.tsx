@@ -1,1 +1,80 @@
-m«ëˆ§½©buªàºg§µÊ&¦‰ŞÛ?qªŞ–ˆ¢¹­³,j›jÇºà7an{¦Š)ßŠW¨¢ë_ŠW›n·š‘ºŞjG§r‡^vËkŠx"Ú'ºg!j¶œµêåŠw¬×^r‡^uç(uë"›­†¥¥Ø¬¦V²¶¬™ë,j¢Šzn¶)éº×â•ç^}«¥µú+²×bŠ.¶›­¢ëiº×â•ç^}«¥µú+²×hº
+"use client";
+
+import { useActionState, useEffect, useRef, useState } from "react";
+import { Camera, Info, X } from "lucide-react";
+import type { CareLogFormState } from "@/lib/care-logs/validation";
+import { CARE_CATEGORIES, CARE_LOG_CONTENT_MAX_LENGTH, type CareCategory } from "@/lib/care-logs/constants";
+import { CARE_IMAGE_ACCEPT, CARE_IMAGE_MAX_BYTES } from "@/lib/care-logs/images.shared";
+
+type CareLogAction = (state: CareLogFormState, formData: FormData) => Promise<CareLogFormState>;
+type Props = { action: CareLogAction; careLogId?: string; initialCategory?: string | null; initialContent?: string; initialImageUrl?: string | null; submitLabel: string };
+
+export function CareLogForm({ action, careLogId, initialCategory = null, initialContent = "", initialImageUrl = null, submitLabel }: Props) {
+  const [state, formAction, pending] = useActionState(action, { error: null });
+  const [category, setCategory] = useState<CareCategory | null>(CARE_CATEGORIES.includes(initialCategory as CareCategory) ? (initialCategory as CareCategory) : null);
+  const [content, setContent] = useState(initialContent);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(initialImageUrl);
+  const [imageAction, setImageAction] = useState<"keep" | "remove" | "replace">("keep");
+  const [imageError, setImageError] = useState<string | null>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => () => {
+    if (previewUrl?.startsWith("blob:")) URL.revokeObjectURL(previewUrl);
+  }, [previewUrl]);
+
+  function chooseImage(file: File | undefined) {
+    setImageError(null);
+    if (!file) return;
+    const rejectImage = (message: string) => {
+      if (inputRef.current) inputRef.current.value = "";
+      setPreviewUrl(initialImageUrl);
+      setImageAction("keep");
+      setImageError(message);
+    };
+    if (!CARE_IMAGE_ACCEPT.split(",").includes(file.type)) {
+      rejectImage("JPG, PNG, WEBP ì‚¬ì§„ë§Œ ì‚¬ìš©í•  ìˆ˜ ìˆì–´ìš”.");
+      return;
+    }
+    if (file.size > CARE_IMAGE_MAX_BYTES) {
+      rejectImage("ì‚¬ì§„ì€ 5MB ì´í•˜ë¡œ ì„ íƒí•´ì£¼ì„¸ìš”.");
+      return;
+    }
+    setPreviewUrl(URL.createObjectURL(file));
+    setImageAction("replace");
+  }
+
+  function removeImage() {
+    if (inputRef.current) inputRef.current.value = "";
+    setPreviewUrl(null);
+    setImageError(null);
+    setImageAction(initialImageUrl ? "remove" : "keep");
+  }
+  return (
+    <form action={formAction} className="record-form">
+      {careLogId ? <input type="hidden" name="careLogId" value={careLogId} /> : null}
+      <input type="hidden" name="category" value={category ?? ""} />
+      <input type="hidden" name="imageAction" value={imageAction} />
+      <fieldset disabled={pending}>
+        <legend>ì–´ë–¤ ëŒë´„ì´ì—ˆë‚˜ìš”? <span>ì„ íƒ</span></legend>
+        <p className="field-help">ì •í•˜ì§€ ì•Šì•„ë„ ê¸°ë¡í•  ìˆ˜ ìˆì–´ìš”.</p>
+        <div className="topic-grid">
+          {CARE_CATEGORIES.map((topic) => <button type="button" key={topic} className={category === topic ? "topic-button selected" : "topic-button"} aria-pressed={category === topic} onClick={() => setCategory(category === topic ? null : topic)}>{topic}</button>)}
+        </div>
+      </fieldset>
+      <label className="field-label" htmlFor="care-content">ì˜¤ëŠ˜ì˜ ëŒë´„ ì´ì•¼ê¸°</label>
+      <div className="textarea-wrap">
+        <textarea id="care-content" name="content" value={content} onChange={(event) => setContent(event.target.value)} placeholder="ì˜¤ëŠ˜ ë‚˜ë¥¼ ìœ„í•´ ë¬´ì—‡ì„ í–ˆë‚˜ìš”?" maxLength={CARE_LOG_CONTENT_MAX_LENGTH} required disabled={pending} />
+        <span>{content.length} / {CARE_LOG_CONTENT_MAX_LENGTH}</span>
+      </div>
+      <div className="photo-field">
+        <span className="field-label">ì‚¬ì§„ <small>ì„ íƒ Â· ìµœëŒ€ 1ì¥ Â· 5MB</small></span>
+        <input ref={inputRef} className="photo-input" id="care-image" name="image" type="file" accept={CARE_IMAGE_ACCEPT} onChange={(event) => chooseImage(event.target.files?.[0])} disabled={pending} />
+        {previewUrl ? <div className="photo-preview"><img src={previewUrl} alt="ì„ íƒí•œ ëŒë´„ ì‚¬ì§„ ë¯¸ë¦¬ë³´ê¸°" /><button type="button" onClick={removeImage} disabled={pending}><X size={17} aria-hidden="true" /> ì‚¬ì§„ ì œê±°</button></div> : <label className="photo-button" htmlFor="care-image"><Camera size={23} aria-hidden="true" /><span>ì‚¬ì§„ í•œ ì¥ ì„ íƒí•˜ê¸°</span></label>}
+        {imageError ? <p className="form-error photo-error" role="alert">{imageError}</p> : null}
+      </div>
+      <div className="gentle-note"><Info size={17} aria-hidden="true" /><p>ì™„ë²½í•œ í•˜ë£¨ë³´ë‹¤, ë‚˜ë¥¼ ëŒì•„ë³¸ ë§ˆìŒì´ ë” ì¤‘ìš”í•´ìš”.</p></div>
+      {state.error ? <p className="form-error record-error" role="alert">{state.error}</p> : null}
+      <button className="primary-button" type="submit" disabled={pending}>{pending ? "ì €ì¥í•˜ëŠ” ì¤‘â€¦" : submitLabel}</button>
+    </form>
+  );
+}
