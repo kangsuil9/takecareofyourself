@@ -148,6 +148,34 @@ button { color: inherit; }
 .bar-track .green { background: #91a892; }.bar-track .peach { background: #d4ad98; }.bar-track .blue { background: #aabcc0; }.bar-track .yellow { background: #d5c38e; }
 .outline-button { width: 100%; min-height: 52px; display: flex; justify-content: center; align-items: center; gap: 8px; border: 1px solid #aeb9b0; border-radius: 15px; color: var(--green); font-size: 13px; font-weight: 700; }
 .closing-copy { margin: 26px 0 0; text-align: center; color: #8b928d; font-family: Georgia, "Noto Serif KR", serif; font-size: 12px; line-height: 1.7; }
+.reflection-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin: 0 0 30px; padding: 5px; border-radius: 14px; background: #e9e8e1; }
+.reflection-tabs a { min-height: 42px; display: grid; place-items: center; border-radius: 10px; color: #858c86; font-size: 13px; }
+.reflection-tabs a.active { background: var(--paper); color: var(--green); font-weight: 700; box-shadow: 0 2px 10px rgba(49, 57, 51, .06); }
+.reflection-summary { overflow: hidden; border: 1px solid var(--line); border-radius: 20px; background: var(--paper); }
+.reflection-total { display: flex; align-items: baseline; gap: 7px; padding: 23px 21px 20px; background: #e7ede5; }
+.reflection-total strong { color: var(--green); font-family: Georgia, serif; font-size: 36px; }
+.reflection-total span { color: #667169; font-size: 13px; }
+.reflection-category-list { padding: 7px 20px; }
+.reflection-category-row { min-height: 43px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #eeece6; font-size: 12px; }
+.reflection-category-row:last-child { border-bottom: 0; }
+.reflection-category-row strong { color: var(--green); font-weight: 600; }
+.reflection-category-row.uncategorized { color: #747d76; }
+.reflection-zero, .reflection-empty p { margin: 0; padding: 30px 22px; color: var(--muted); font-size: 13px; line-height: 1.7; text-align: center; }
+.reflection-empty { border: 1px solid var(--line); border-radius: 20px; background: var(--paper); }
+.reflection-copy { margin: 18px 2px 0; color: #7c857e; font-family: Georgia, "Noto Serif KR", serif; font-size: 12px; line-height: 1.75; text-align: center; }
+.period-records { margin: 35px 0 29px; }
+.my-record-list { display: grid; gap: 12px; }
+.my-record-card { padding: 18px; border: 1px solid var(--line); border-radius: 18px; background: var(--paper); }
+.my-record-card header { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.my-record-card time { color: #8a928c; font-size: 10px; }
+.my-record-card .category-chip { margin-left: auto; }
+.my-record-card > p { margin: 14px 0 0; font-size: 13px; line-height: 1.75; white-space: pre-wrap; }
+.my-records-empty { padding: 38px 20px; border: 1px solid var(--line); border-radius: 18px; background: var(--paper); text-align: center; }
+.my-records-empty h2 { margin: 0 0 8px; font-family: Georgia, "Noto Serif KR", serif; font-size: 17px; }
+.my-records-empty p { margin: 0; color: var(--muted); font-size: 11px; line-height: 1.65; }
+.all-records-intro { padding: 37px 2px 28px; }
+.all-records-intro h2 { margin: 8px 0 10px; font-family: Georgia, "Noto Serif KR", serif; font-size: 23px; letter-spacing: -.04em; }
+.all-records-intro p { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.7; }
 
 .sub-header { height: 72px; display: grid; grid-template-columns: 40px 1fr 40px; align-items: center; border-bottom: 1px solid #e7e3db; }
 .sub-header h1 { margin: 0; text-align: center; font-family: Georgia, "Noto Serif KR", serif; font-size: 17px; }
