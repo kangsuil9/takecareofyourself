@@ -4,7 +4,7 @@ import { AppShell } from "@/components/app-shell";
 import { PageHeader } from "@/components/page-header";
 import { articles, getArticle } from "@/lib/articles";
 
-type Props = { params: Promise<{ articleId: string }> };
+type Props = { params: Promise<{ articleId: string }>; searchParams: Promise<{ from?: string }> };
 
 export function generateStaticParams() {
   return articles.map((article) => ({ articleId: article.id }));
@@ -16,14 +16,15 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return article ? { title: article.title, description: article.summary } : {};
 }
 
-export default async function ArticleDetailPage({ params }: Props) {
-  const { articleId } = await params;
+export default async function ArticleDetailPage({ params, searchParams }: Props) {
+  const [{ articleId }, query] = await Promise.all([params, searchParams]);
   if (!articles.some((item) => item.id === articleId)) notFound();
   const article = getArticle(articleId);
+  const backHref = query.from === "articles" ? "/care/articles" : "/care";
 
   return (
     <AppShell>
-      <PageHeader title="건강 이야기" backHref="/care/articles" />
+      <PageHeader title="건강 이야기" backHref={backHref} />
       <article className="article-detail">
         <header><span className="category-chip">{article.category}</span><h1>{article.title}</h1><p>{article.summary}</p><span className="read-time">읽는 데 {article.readingTime}</span></header>
         <div className={`detail-visual ${article.accent}`} aria-hidden="true"><span /><i /></div>

@@ -4,7 +4,7 @@ import type { Article } from "@/lib/articles";
 
 export function ArticleCard({ article }: { article: Article }) {
   return (
-    <Link href={`/care/articles/${article.id}`} className="article-card">
+    <Link href={`/care/articles/${article.id}?from=articles`} className="article-card">
       <div className={`article-visual ${article.accent}`} aria-hidden="true">
         <span className="visual-orbit" />
         <span className="visual-leaf" />

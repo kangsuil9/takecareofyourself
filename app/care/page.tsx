@@ -49,12 +49,15 @@ export default async function CarePage({ searchParams }: Props) {
     <AppShell>
       <header className="brand-header"><div><span className="eyebrow">TAKE CARE OF YOURSELF</span><h1>돌봄</h1></div><div className="brand-mark" aria-hidden="true"><span /></div></header>
       {feedback ? <div className={params.error ? "care-feedback error" : "care-feedback"} role="status">{feedback}</div> : null}
-      <section className="intro-section"><p>사람들은 자신을<br />이렇게 돌보고 있습니다.</p></section>
-      <section className="knowledge-card">
-        <div className="knowledge-art" aria-hidden="true"><span className="sun" /><span className="hill one" /><span className="hill two" /></div>
-        <div className="knowledge-copy"><span className="card-kicker">오늘의 돌봄 지식 · 수면</span><h2>잠을 줄여 만든 나만의 시간은<br />정말 나를 위한 시간일까요?</h2><p>편안한 밤을 만드는 작은 단서를 살펴보세요.</p><Link href="/care/articles/restful-sleep" className="inline-link">천천히 읽어보기 <ArrowRight size={16} aria-hidden="true" /></Link></div>
+      <section className="knowledge-section" aria-labelledby="knowledge-title">
+        <span className="eyebrow">CARE KNOWLEDGE</span><h2 id="knowledge-title">건강지식</h2>
+        <Link href="/care/articles/restful-sleep?from=care" className="knowledge-compact-card">
+          <div className="knowledge-thumbnail" aria-hidden="true"><span /><i /></div>
+          <div><span className="knowledge-meta">수면 · 읽는 데 5분</span><h3>잠을 줄여 만든 나만의 시간은 정말 나를 위한 시간일까요?</h3></div>
+        </Link>
+        <Link href="/care/articles" className="knowledge-more-link">건강지식 더보기 <ArrowRight size={15} aria-hidden="true" /></Link>
       </section>
-      <Link href="/care/articles" className="more-link">건강 이야기 더보기 <ArrowRight size={17} aria-hidden="true" /></Link>
+      <section className="intro-section"><p>사람들은 자신을<br />이렇게 돌보고 있습니다.</p></section>
       <section className="feed-section" aria-labelledby="care-feed-title">
         <div className="section-heading"><div><span className="eyebrow">OUR MOMENTS</span><h2 id="care-feed-title">오늘의 돌봄</h2></div><span className="muted-label">최신순</span></div>
         {error ? <div className="feed-empty"><h3>기록을 불러오지 못했어요.</h3><p>잠시 후 다시 확인해주세요.</p></div> : careLogs?.length ? (

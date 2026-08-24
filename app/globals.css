@@ -30,19 +30,18 @@ button { color: inherit; }
 .brand-header h1 { margin: 5px 0 0; font-family: Georgia, "Noto Serif KR", serif; font-size: 30px; font-weight: 600; letter-spacing: -.04em; }
 .brand-mark { width: 35px; height: 35px; border-radius: 50%; background: var(--green-soft); position: relative; }
 .brand-mark span { position: absolute; width: 9px; height: 17px; border-radius: 100% 0 100% 0; background: var(--green); left: 14px; top: 8px; transform: rotate(25deg); }
-.intro-section { padding: 23px 0 25px; }
+.intro-section { padding: 19px 0 23px; }
 .intro-section p { margin: 0; font-family: Georgia, "Noto Serif KR", serif; font-size: clamp(25px, 7vw, 30px); line-height: 1.42; letter-spacing: -.045em; }
 
-.knowledge-card { border-radius: 26px; overflow: hidden; background: #e6ece3; }
-.knowledge-art { height: 157px; overflow: hidden; position: relative; background: linear-gradient(165deg, #d9e3db, #f0e8d8); }
-.knowledge-art .sun { position: absolute; width: 52px; height: 52px; border-radius: 50%; background: rgba(252, 244, 212, .9); top: 28px; right: 48px; box-shadow: 0 0 30px rgba(255, 241, 188, .8); }
-.knowledge-art .hill { position: absolute; border-radius: 50% 50% 0 0; bottom: -40px; transform: rotate(-5deg); }
-.knowledge-art .hill.one { background: #adc1b0; width: 115%; height: 120px; left: -15%; }
-.knowledge-art .hill.two { background: #7e9b83; width: 95%; height: 88px; right: -28%; bottom: -28px; transform: rotate(8deg); }
-.knowledge-copy { padding: 22px 21px 24px; }
-.card-kicker { color: var(--green); font-size: 12px; font-weight: 700; }
-.knowledge-copy h2 { margin: 10px 0 8px; font-family: Georgia, "Noto Serif KR", serif; font-size: 20px; line-height: 1.52; letter-spacing: -.035em; }
-.knowledge-copy p { margin: 0 0 18px; color: #69746d; font-size: 13px; line-height: 1.6; }
+.knowledge-section { padding: 4px 0 0; }
+.knowledge-section > h2 { margin: 5px 0 11px; font-family: Georgia, "Noto Serif KR", serif; font-size: 18px; letter-spacing: -.035em; }
+.knowledge-compact-card { min-height: 88px; display: grid; grid-template-columns: 76px 1fr; gap: 14px; align-items: center; padding: 10px; border: 1px solid rgba(209, 218, 207, .9); border-radius: 17px; background: #e9eee7; }
+.knowledge-thumbnail { width: 76px; height: 68px; overflow: hidden; position: relative; border-radius: 12px; background: linear-gradient(155deg, #d9e3db, #f0e8d8); }
+.knowledge-thumbnail span { position: absolute; width: 23px; height: 23px; top: 11px; right: 13px; border-radius: 50%; background: rgba(252, 244, 212, .95); }
+.knowledge-thumbnail i { position: absolute; width: 110%; height: 42px; left: -7%; bottom: -15px; border-radius: 50% 50% 0 0; background: #8ba08c; transform: rotate(-5deg); }
+.knowledge-meta { color: var(--green); font-size: 10px; font-weight: 700; }
+.knowledge-compact-card h3 { margin: 6px 0 0; font-family: Georgia, "Noto Serif KR", serif; font-size: 14px; line-height: 1.45; letter-spacing: -.025em; }
+.knowledge-more-link { width: 100%; display: flex; justify-content: flex-end; align-items: center; gap: 5px; padding: 10px 2px 4px; color: var(--green); font-size: 11px; font-weight: 700; }
 .inline-link, .more-link, .text-link { display: inline-flex; align-items: center; gap: 6px; color: var(--green); font-size: 13px; font-weight: 700; }
 .more-link { width: 100%; justify-content: flex-end; padding: 18px 2px 34px; }
 
