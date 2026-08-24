@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { requireCareLogOwner } from "@/lib/care-logs/server";
 import { parseCareLogFormData, type CareLogFormState } from "@/lib/care-logs/validation";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
 export async function createCareLog(_: CareLogFormState, formData: FormData): Promise<CareLogFormState> {
@@ -34,8 +35,11 @@ export async function softDeleteCareLog(formData: FormData) {
   if (!careLogId) redirect("/care?error=delete");
   const profile = await requireCareLogOwner();
   const supabase = await createClient();
-  const { data, error } = await supabase.from("care_logs").update({ deleted_at: new Date().toISOString() }).eq("id", careLogId).eq("user_id", profile.id).is("deleted_at", null).select("id").maybeSingle();
-  if (error || !data) redirect("/care?error=delete");
+  const { data: ownedCareLog, error: readError } = await supabase.from("care_logs").select("id").eq("id", careLogId).eq("user_id", profile.id).is("deleted_at", null).maybeSingle();
+  if (readError || !ownedCareLog) redirect("/care?error=delete");
+  const admin = createAdminClient();
+  const { error } = await admin.from("care_logs").update({ deleted_at: new Date().toISOString() }).eq("id", careLogId).eq("user_id", profile.id).is("deleted_at", null);
+  if (error) redirect("/care?error=delete");
   revalidatePath("/care");
   redirect("/care?deleted=1");
 }
