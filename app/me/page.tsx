@@ -41,5 +41,6 @@ export default async function MePage({ searchParams }: Props) {
     </section>
     <section className="period-records" aria-labelledby="period-records-title"><div className="section-heading"><div><span className="eyebrow">MY MOMENTS</span><h2 id="period-records-title">{range.label}의 기록</h2></div></div>{error ? null : <MyCareLogList careLogs={records} />}</section>
     <Link href="/me/records" className="outline-button">나의 전체 기록 보기 <ArrowRight size={17} aria-hidden="true" /></Link>
+    {profile.role === "ADMIN" ? <section className="me-admin-section" aria-labelledby="me-admin-title"><span className="eyebrow">ADMIN</span><h2 id="me-admin-title">관리자</h2><Link href="/admin/articles">건강지식 관리 <ArrowRight size={15} aria-hidden="true" /></Link></section> : null}
   </AppShell>;
 }
