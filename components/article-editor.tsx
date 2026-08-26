@@ -19,6 +19,24 @@ const blockLabel = { paragraph: "본문", heading: "소제목", key_message: "�
 
 function textOf(block: TextBlock) { return block.segments.map((segment) => segment.text).join(""); }
 
+function boldMarksOf(block: TextBlock) {
+  return block.segments.flatMap((segment) => Array(segment.text.length).fill(segment.bold === true) as boolean[]);
+}
+
+function segmentsFromTextAndMarks(text: string, marks: boolean[]) {
+  if (!text) return [{ text: "" }];
+  const segments: TextBlock['segments'] = [];
+  let start = 0;
+  for (let index = 1; index <= text.length; index += 1) {
+    if (index === text.length || marks[index] !== marks[start]) {
+      const segmentText = text.slice(start, index);
+      segments.push(marks[start] ? { text: segmentText, bold: true } : { text: segmentText });
+      start = index;
+    }
+  }
+  return segments;
+}
+
 export function ArticleEditor({ action, heading, articleId, initial, imageUrls = {} }: Props) {
   const [state, formAction, pending] = useActionState(action, { error: null });
   const [title, setTitle] = useState(initial?.title ?? "");
@@ -62,7 +80,18 @@ export function ArticleEditor({ action, heading, articleId, initial, imageUrls =
   }
 
   function setText(block: TextBlock, text: string) {
-    updateBlock(block.id, () => ({ ...block, segments: [{ text }] }));
+    const previousText = textOf(block);
+    const previousMarks = boldMarksOf(block);
+    let prefix = 0;
+    while (prefix < previousText.length && prefix < text.length && previousText[prefix] === text[prefix]) prefix += 1;
+    let suffix = 0;
+    while (suffix < previousText.length - prefix && suffix < text.length - prefix && previousText[previousText.length - 1 - suffix] === text[text.length - 1 - suffix]) suffix += 1;
+    const nextMarks = [
+      ...previousMarks.slice(0, prefix),
+      ...Array(Math.max(0, text.length - prefix - suffix)).fill(false),
+      ...previousMarks.slice(previousText.length - suffix),
+    ];
+    updateBlock(block.id, () => ({ ...block, segments: segmentsFromTextAndMarks(text, nextMarks) }));
   }
 
   function applyBold(block: TextBlock) {
@@ -71,11 +100,9 @@ export function ArticleEditor({ action, heading, articleId, initial, imageUrls =
     const text = textOf(block);
     const start = textarea.selectionStart;
     const end = textarea.selectionEnd;
-    const segments = [
-      ...(text.slice(0, start) ? [{ text: text.slice(0, start) }] : []),
-      { text: text.slice(start, end), bold: true as const },
-      ...(text.slice(end) ? [{ text: text.slice(end) }] : []),
-    ];
+    const marks = boldMarksOf(block);
+    for (let index = start; index < end; index += 1) marks[index] = true;
+    const segments = segmentsFromTextAndMarks(text, marks);
     updateBlock(block.id, () => ({ ...block, segments }));
     setImageError(null);
   }
