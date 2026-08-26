@@ -1,5 +1,5 @@
-import type { ArticleContentBlock, ArticleInlineSegment, ArticleReference } from "@/lib/articles/cms.types";
-import { ARTICLE_IMAGE_MAX_COUNT } from "@/lib/articles/images.shared";
+import type { ArticleContentBlock, ArticleInlineSegment, ArticleReference } from "./cms.types.ts";
+import { ARTICLE_IMAGE_MAX_COUNT } from "./images.shared.ts";
 
 const BLOCK_TYPES = new Set(["paragraph", "heading", "key_message", "callout", "image"]);
 const MAX_BLOCKS = 80;
@@ -38,8 +38,9 @@ export function parseArticleBlocks(raw: string): { success: true; blocks: Articl
       const path = typeof block.path === "string" && block.path ? block.path : undefined;
       const uploadKey = typeof block.uploadKey === "string" && /^[a-zA-Z0-9-]{1,80}$/.test(block.uploadKey) ? block.uploadKey : undefined;
       const alt = typeof block.alt === "string" ? block.alt.trim().slice(0, 300) : "";
-      if ((!path && !uploadKey) || (path && uploadKey)) return { success: false, error: "본문 이미지를 다시 선택해주세요." };
-      blocks.push({ id: block.id, type: "image", path, uploadKey, alt });
+      const description = typeof block.description === "string" ? block.description.trim().slice(0, 300) : "";
+      if (path && uploadKey) return { success: false, error: "본문 이미지를 다시 선택해주세요." };
+      blocks.push({ id: block.id, type: "image", path, uploadKey, alt, description });
       continue;
     }
     const segments = parseSegments(block.segments);

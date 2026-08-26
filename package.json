@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test:article-import": "node --experimental-strip-types --test tests/article-import.test.ts"
   },
   "dependencies": {
     "@supabase/ssr": "0.12.4",

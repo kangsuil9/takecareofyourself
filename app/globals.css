@@ -302,6 +302,12 @@ button { color: inherit; }
 .admin-card-heading h2 { margin-bottom: 6px; }
 .admin-card-heading p { margin: 0; color: var(--muted); font-size: 10px; }
 .admin-small-button { display: flex; align-items: center; gap: 5px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 9px; background: white; font-size: 10px; }
+.draft-import-panel { display: grid; gap: 12px; margin-bottom: 18px; padding: 16px; border: 1px solid #dfe4dc; border-radius: 14px; background: #f4f6f1; }
+.draft-import-guide { display: flex; flex-wrap: wrap; gap: 6px 12px; color: #69756c; font-size: 10px; line-height: 1.6; }
+.draft-import-guide strong { width: 100%; color: var(--ink); font-size: 11px; }
+.draft-import-panel textarea { width: 100%; min-height: 280px; padding: 14px; border: 1px solid var(--line); border-radius: 11px; background: var(--paper); color: var(--ink); line-height: 1.75; resize: vertical; outline: none; }
+.draft-import-panel textarea:focus { border-color: #91a494; box-shadow: 0 0 0 3px rgba(82, 107, 91, .08); }
+.draft-convert-button { justify-self: end; min-height: 39px; padding: 0 14px; border: 0; border-radius: 10px; background: var(--green); color: white; font-size: 11px; font-weight: 700; }
 .block-add-toolbar { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 15px; }
 .block-add-toolbar button, .inline-toolbar button { display: flex; align-items: center; gap: 5px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 9px; background: #f6f5f1; font-size: 10px; }
 .article-block-list { display: grid; gap: 11px; }
@@ -318,6 +324,8 @@ button { color: inherit; }
 .inline-toolbar { display: flex; align-items: center; gap: 8px; margin-bottom: 7px; }
 .inline-toolbar span { color: var(--green); font-size: 9px; }
 .article-block-image { display: grid; gap: 10px; }
+.article-image-description { display: grid; gap: 3px; margin: 0; color: #59665d; font-size: 11px; line-height: 1.5; }
+.article-image-description span { color: #909891; font-size: 9px; }
 .article-block-image img { display: block; width: 100%; max-height: 330px; border-radius: 12px; background: #edf0eb; object-fit: contain; }
 .admin-replace-image { justify-self: start; padding: 7px 10px; border: 1px solid var(--line); border-radius: 8px; color: var(--green); font-size: 10px; cursor: pointer; }
 .reference-list { display: grid; gap: 9px; }
@@ -329,6 +337,12 @@ button { color: inherit; }
 .admin-savebar button.publish { border-color: var(--green); background: var(--green); color: white; }
 .admin-savebar button:disabled { opacity: .55; }
 .article-preview-overlay { position: fixed; z-index: 100; inset: 0; display: grid; place-items: center; padding: 24px; background: rgba(34, 40, 36, .52); backdrop-filter: blur(3px); }
+.replace-draft-dialog { width: min(390px, 100%); padding: 25px; border-radius: 18px; background: var(--paper); box-shadow: 0 30px 90px rgba(25, 30, 27, .3); }
+.replace-draft-dialog h2 { margin: 0 0 10px; font-family: Georgia, "Noto Serif KR", serif; font-size: 18px; line-height: 1.55; }
+.replace-draft-dialog p { margin: 0; color: var(--muted); font-size: 11px; }
+.replace-draft-dialog > div { display: flex; justify-content: flex-end; gap: 8px; margin-top: 23px; }
+.replace-draft-dialog button { min-height: 39px; padding: 0 14px; border: 1px solid var(--line); border-radius: 10px; background: white; color: var(--ink); font-size: 11px; font-weight: 700; }
+.replace-draft-dialog button.replace { border-color: var(--green); background: var(--green); color: white; }
 .article-preview-panel { width: min(430px, 100%); max-height: calc(100dvh - 48px); overflow: hidden; border-radius: 22px; background: var(--surface); box-shadow: 0 30px 90px rgba(25, 30, 27, .3); }
 .article-preview-panel > header { min-height: 66px; display: flex; align-items: center; justify-content: space-between; padding: 11px 17px; border-bottom: 1px solid var(--line); background: var(--paper); }
 .article-preview-panel > header div { display: grid; gap: 4px; min-width: 0; }
@@ -355,6 +369,9 @@ button { color: inherit; }
   .admin-split-fields, .reference-row { grid-template-columns: 1fr; }
   .reference-row button { justify-self: end; }
   .admin-form-card { padding: 18px; }
+  .admin-card-heading { align-items: stretch; flex-direction: column; }
+  .admin-small-button { justify-content: center; }
+  .draft-import-panel textarea { min-height: 230px; }
   .article-preview-overlay { padding: 0; }
   .article-preview-panel { width: 100%; max-height: 100dvh; border-radius: 0; }
   .cms-article-preview { max-height: calc(100dvh - 66px); }

@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import type { ArticleStatus, Json } from "@/lib/supabase/database.types";
 import type { ArticleContentBlock, ArticleFormState } from "@/lib/articles/cms.types";
 import { parseArticleImage, removeArticleImages, uploadArticleImage } from "@/lib/articles/images";
+import { hasUnlinkedArticleImage } from "@/lib/articles/publishing";
 import { articleBlocksHaveContent, parseArticleBlocks, parseArticleReferences } from "@/lib/articles/validation";
 import { requireAdmin } from "@/lib/auth/guards";
 import { createClient } from "@/lib/supabase/server";
@@ -31,6 +32,9 @@ async function saveArticle(articleId: string | null, formData: FormData): Promis
   const parsedReferences = parseArticleReferences(String(formData.get("references") ?? "[]"));
   if (!parsedReferences.success) return { error: parsedReferences.error };
   if (intent === "PUBLISHED" && (!title || !category || !articleBlocksHaveContent(parsedBlocks.blocks))) return { error: "발행하려면 제목, 카테고리, 본문을 입력해주세요." };
+  const getBlockImageEntry = (block: Extract<ArticleContentBlock, { type: "image" }>) => formData.get(`block-image-${block.uploadKey ?? block.id}`);
+  const hasImageFile = (entry: FormDataEntryValue | null) => entry instanceof File && entry.size > 0;
+  if (intent === "PUBLISHED" && hasUnlinkedArticleImage(parsedBlocks.blocks, (block) => hasImageFile(getBlockImageEntry(block)))) return { error: "아직 이미지가 연결되지 않은 이미지 블록이 있습니다." };
 
   let existing: ExistingArticle | null = null;
   if (articleId) {
@@ -67,13 +71,18 @@ async function saveArticle(articleId: string | null, formData: FormData): Promis
   const storedBlocks: ArticleContentBlock[] = [];
   for (const block of parsedBlocks.blocks) {
     if (block.type !== "image") { storedBlocks.push(block); continue; }
-    if (block.path) { storedBlocks.push({ id: block.id, type: "image", path: block.path, alt: block.alt }); continue; }
-    const result = await upload(formData.get(`block-image-${block.uploadKey}`));
+    if (block.path) { storedBlocks.push({ id: block.id, type: "image", path: block.path, alt: block.alt, description: block.description }); continue; }
+    const entry = getBlockImageEntry(block);
+    if (!hasImageFile(entry)) {
+      storedBlocks.push({ id: block.id, type: "image", alt: block.alt, description: block.description });
+      continue;
+    }
+    const result = await upload(entry);
     if (result.error || !result.path) {
       await removeArticleImages(supabase, uploadedPaths, profile.id);
       return { error: result.error ?? "본문 이미지를 업로드하지 못했어요." };
     }
-    storedBlocks.push({ id: block.id, type: "image", path: result.path, alt: block.alt });
+    storedBlocks.push({ id: block.id, type: "image", path: result.path, alt: block.alt, description: block.description });
   }
 
   const publishedAt = intent === "PUBLISHED" ? (existing?.status === "PUBLISHED" ? existing.published_at : new Date().toISOString()) : null;

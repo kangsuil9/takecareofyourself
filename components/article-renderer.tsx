@@ -14,7 +14,7 @@ export function ArticleRenderer({ blocks, references = [], imageUrls = {} }: { b
       if (block.type === "heading") return <h2 key={block.id}>{block.text}</h2>;
       if (block.type === "image") {
         const src = block.previewUrl ?? (block.path ? imageUrls[block.path] : undefined);
-        return src ? <figure key={block.id}><img src={src} alt={block.alt} />{block.alt ? <figcaption>{block.alt}</figcaption> : null}</figure> : <div className="article-image-placeholder" key={block.id}>이미지 미리보기</div>;
+        return src ? <figure key={block.id}><img src={src} alt={block.alt || block.description || ""} />{block.alt ? <figcaption>{block.alt}</figcaption> : null}</figure> : <div className="article-image-placeholder" key={block.id}>{block.description || "이미지 미리보기"}</div>;
       }
       if (block.type === "key_message") return <p className="article-key-message" key={block.id}><InlineText segments={block.segments} /></p>;
       if (block.type === "callout") return <blockquote key={block.id}><InlineText segments={block.segments} /></blockquote>;

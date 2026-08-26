@@ -2,10 +2,11 @@
 
 import Link from "next/link";
 import { useActionState, useRef, useState } from "react";
-import { ArrowDown, ArrowUp, Bold, Camera, Eye, FileText, Heading2, ImagePlus, MessageSquareQuote, Plus, Trash2, X } from "lucide-react";
+import { ArrowDown, ArrowUp, Bold, Camera, ClipboardPaste, Eye, FileText, Heading2, ImagePlus, MessageSquareQuote, Plus, Trash2, X } from "lucide-react";
 import { ArticleRenderer } from "@/components/article-renderer";
 import type { ArticleContentBlock, ArticleFormState, ArticleReference } from "@/lib/articles/cms.types";
 import { ARTICLE_IMAGE_ACCEPT, ARTICLE_IMAGE_MAX_BYTES, ARTICLE_IMAGE_MAX_COUNT } from "@/lib/articles/images.shared";
+import { parseArticleDraft } from "@/lib/articles/import-draft";
 import type { ArticleStatus } from "@/lib/supabase/database.types";
 
 type ArticleAction = (state: ArticleFormState, formData: FormData) => Promise<ArticleFormState>;
@@ -49,6 +50,10 @@ export function ArticleEditor({ action, heading, articleId, initial, imageUrls =
   const [coverPreview, setCoverPreview] = useState<string | null>(initial?.coverImageUrl ?? null);
   const [coverAction, setCoverAction] = useState<"keep" | "remove" | "replace">("keep");
   const [imageError, setImageError] = useState<string | null>(null);
+  const [importOpen, setImportOpen] = useState(false);
+  const [importSource, setImportSource] = useState("");
+  const [importError, setImportError] = useState<string | null>(null);
+  const [pendingImport, setPendingImport] = useState<ArticleContentBlock[] | null>(null);
   const textareas = useRef(new Map<string, HTMLTextAreaElement>());
 
   function validateImage(file: File) {
@@ -60,7 +65,7 @@ export function ArticleEditor({ action, heading, articleId, initial, imageUrls =
   function addBlock(type: ArticleContentBlock['type']) {
     if (type === "image") {
       if (blocks.filter((block) => block.type === "image").length >= ARTICLE_IMAGE_MAX_COUNT) { setImageError(`본문 이미지는 최대 ${ARTICLE_IMAGE_MAX_COUNT}장까지 사용할 수 있어요.`); return; }
-      setBlocks((current) => [...current, { id: createId(), type: "image", uploadKey: createId(), alt: "" }]);
+      setBlocks((current) => [...current, { id: createId(), type: "image", uploadKey: createId(), alt: "", description: "" }]);
     } else if (type === "heading") setBlocks((current) => [...current, { id: createId(), type, text: "" }]);
     else setBlocks((current) => [...current, { id: createId(), type, segments: [{ text: "" }] }]);
   }
@@ -124,7 +129,26 @@ export function ArticleEditor({ action, heading, articleId, initial, imageUrls =
     setCoverAction("replace");
   }
 
-  const serializedBlocks = blocks.map((block) => block.type === "image" ? { id: block.id, type: block.type, path: block.path, uploadKey: block.uploadKey, alt: block.alt } : block);
+  function convertImportedDraft() {
+    const result = parseArticleDraft(importSource, createId, ARTICLE_IMAGE_MAX_COUNT);
+    if (!result.success) { setImportError(result.error); return; }
+    setImportError(null);
+    if (blocks.length) { setPendingImport(result.blocks); return; }
+    setBlocks(result.blocks);
+    setImportOpen(false);
+    setImportSource("");
+  }
+
+  function confirmImportedDraft() {
+    if (!pendingImport) return;
+    setBlocks(pendingImport);
+    setPendingImport(null);
+    setImportOpen(false);
+    setImportSource("");
+    setImageError(null);
+  }
+
+  const serializedBlocks = blocks.map((block) => block.type === "image" ? { id: block.id, type: block.type, path: block.path, uploadKey: block.uploadKey, alt: block.alt, description: block.description } : block);
   const previewImageUrls = { ...imageUrls, ...Object.fromEntries(blocks.flatMap((block) => block.type === "image" && block.path && block.previewUrl ? [[block.path, block.previewUrl]] : [])) };
 
   return <>
@@ -143,9 +167,9 @@ export function ArticleEditor({ action, heading, articleId, initial, imageUrls =
 
         <section className="admin-form-card"><h2>대표 이미지 <small>선택 · 5MB</small></h2><input className="admin-file-input" id="cover-image" name="coverImage" type="file" accept={ARTICLE_IMAGE_ACCEPT} onChange={(event) => chooseCover(event.target.files?.[0], event.currentTarget)} />{coverPreview ? <div className="admin-cover-preview"><img src={coverPreview} alt="대표 이미지 미리보기" /><button type="button" onClick={() => { setCoverPreview(null); setCoverAction(initial?.coverPath ? "remove" : "keep"); }}><X size={16} /> 제거</button></div> : <label className="admin-image-picker" htmlFor="cover-image"><Camera size={20} /> 대표 이미지 선택</label>}</section>
 
-        <section className="admin-form-card"><div className="admin-card-heading"><div><h2>본문</h2><p>내용의 의미만 선택하면 돌봄 디자인이 자동으로 적용됩니다.</p></div></div><div className="block-add-toolbar"><button type="button" onClick={() => addBlock("paragraph")}><FileText size={15} /> 본문</button><button type="button" onClick={() => addBlock("heading")}><Heading2 size={15} /> 소제목</button><button type="button" onClick={() => addBlock("key_message")}><MessageSquareQuote size={15} /> 핵심 문장</button><button type="button" onClick={() => addBlock("callout")}><MessageSquareQuote size={15} /> 강조 블록</button><button type="button" onClick={() => addBlock("image")}><ImagePlus size={15} /> 이미지</button></div>
+        <section className="admin-form-card"><div className="admin-card-heading"><div><h2>본문</h2><p>내용의 의미만 선택하면 돌봄 디자인이 자동으로 적용됩니다.</p></div><button type="button" className="admin-small-button" onClick={() => setImportOpen((open) => !open)}><ClipboardPaste size={15} /> 원고 한 번에 입력</button></div>{importOpen ? <div className="draft-import-panel"><div className="draft-import-guide"><strong>원고를 붙여넣어 주세요.</strong><span>일반 문장 → 본문</span><span>**텍스트** → 굵게</span><span>## → 소제목 · ### → 핵심 문장</span><span>&gt; → 강조 블록</span><span>[이미지: 설명] → 이미지 자리</span></div><textarea value={importSource} onChange={(event) => { setImportSource(event.target.value); setImportError(null); }} placeholder="긴 원고 전체를 여기에 붙여넣어 주세요." /><button type="button" className="draft-convert-button" onClick={convertImportedDraft}>블록으로 변환</button>{importError ? <p className="admin-form-error" role="alert">{importError}</p> : null}</div> : null}<div className="block-add-toolbar"><button type="button" onClick={() => addBlock("paragraph")}><FileText size={15} /> 본문</button><button type="button" onClick={() => addBlock("heading")}><Heading2 size={15} /> 소제목</button><button type="button" onClick={() => addBlock("key_message")}><MessageSquareQuote size={15} /> 핵심 문장</button><button type="button" onClick={() => addBlock("callout")}><MessageSquareQuote size={15} /> 강조 블록</button><button type="button" onClick={() => addBlock("image")}><ImagePlus size={15} /> 이미지</button></div>
           <div className="article-block-list">{blocks.map((block, index) => <div className={`article-editor-block ${block.type}`} key={block.id}><header><strong>{blockLabel[block.type]}</strong><div><button type="button" aria-label="위로 이동" onClick={() => moveBlock(index, -1)} disabled={index === 0}><ArrowUp size={15} /></button><button type="button" aria-label="아래로 이동" onClick={() => moveBlock(index, 1)} disabled={index === blocks.length - 1}><ArrowDown size={15} /></button><button type="button" aria-label="블록 삭제" onClick={() => removeBlock(block.id)}><Trash2 size={15} /></button></div></header>
-            {block.type === "heading" ? <input value={block.text} onChange={(event) => updateBlock(block.id, () => ({ ...block, text: event.target.value }))} placeholder="소제목을 입력하세요" maxLength={300} /> : block.type === "image" ? <div className="article-block-image"><input className="admin-file-input" id={`block-image-${block.id}`} name={`block-image-${block.uploadKey ?? block.id}`} type="file" accept={ARTICLE_IMAGE_ACCEPT} onChange={(event) => chooseBlockImage(block, event.target.files?.[0], event.currentTarget)} />{block.previewUrl || (block.path && imageUrls[block.path]) ? <><img src={block.previewUrl ?? imageUrls[block.path!]} alt="본문 이미지 미리보기" /><label className="admin-replace-image" htmlFor={`block-image-${block.id}`}>이미지 교체</label></> : <label className="admin-image-picker" htmlFor={`block-image-${block.id}`}><ImagePlus size={18} /> 이미지 선택</label>}<input value={block.alt} onChange={(event) => updateBlock(block.id, () => ({ ...block, alt: event.target.value }))} placeholder="이미지 설명 (선택)" maxLength={300} /></div> : <div className="article-text-control"><div className="inline-toolbar"><button type="button" onClick={() => applyBold(block)}><Bold size={14} /> 선택 영역 굵게</button>{block.segments.some((segment) => segment.bold) ? <span>굵은 구절 적용됨</span> : null}</div><textarea ref={(element) => { if (element) textareas.current.set(block.id, element); else textareas.current.delete(block.id); }} value={textOf(block)} onChange={(event) => setText(block, event.target.value)} placeholder={`${blockLabel[block.type]} 내용을 입력하세요`} /></div>}
+            {block.type === "heading" ? <input value={block.text} onChange={(event) => updateBlock(block.id, () => ({ ...block, text: event.target.value }))} placeholder="소제목을 입력하세요" maxLength={300} /> : block.type === "image" ? <div className="article-block-image"><p className="article-image-description"><span>관리용 이미지 설명</span>{block.description || "설명 없음"}</p><input className="admin-file-input" id={`block-image-${block.id}`} name={`block-image-${block.uploadKey ?? block.id}`} type="file" accept={ARTICLE_IMAGE_ACCEPT} onChange={(event) => chooseBlockImage(block, event.target.files?.[0], event.currentTarget)} />{block.previewUrl || (block.path && imageUrls[block.path]) ? <><img src={block.previewUrl ?? imageUrls[block.path!]} alt="본문 이미지 미리보기" /><label className="admin-replace-image" htmlFor={`block-image-${block.id}`}>이미지 교체</label></> : <label className="admin-image-picker" htmlFor={`block-image-${block.id}`}><ImagePlus size={18} /> 이미지 파일 선택</label>}<input value={block.description ?? ""} onChange={(event) => updateBlock(block.id, () => ({ ...block, description: event.target.value }))} placeholder="관리용 이미지 설명 (사용자 화면 caption 아님)" maxLength={300} /></div> : <div className="article-text-control"><div className="inline-toolbar"><button type="button" onClick={() => applyBold(block)}><Bold size={14} /> 선택 영역 굵게</button>{block.segments.some((segment) => segment.bold) ? <span>굵은 구절 적용됨</span> : null}</div><textarea ref={(element) => { if (element) textareas.current.set(block.id, element); else textareas.current.delete(block.id); }} value={textOf(block)} onChange={(event) => setText(block, event.target.value)} placeholder={`${blockLabel[block.type]} 내용을 입력하세요`} /></div>}
           </div>)}</div>
         </section>
 
@@ -156,5 +180,6 @@ export function ArticleEditor({ action, heading, articleId, initial, imageUrls =
       <div className="admin-savebar"><button type="submit" name="intent" value="draft" disabled={pending}>{pending ? "저장 중…" : "초안 저장"}</button><button className="publish" type="submit" name="intent" value="publish" disabled={pending}>{pending ? "저장 중…" : "발행"}</button></div>
     </form>
     {previewOpen ? <div className="article-preview-overlay" role="dialog" aria-modal="true" aria-label="아티클 미리보기"><div className="article-preview-panel"><header><div><span>모바일 미리보기</span><strong>{title || "제목 없는 아티클"}</strong></div><button type="button" onClick={() => setPreviewOpen(false)} aria-label="미리보기 닫기"><X size={20} /></button></header><article className="cms-article-preview"><div className="cms-preview-heading"><span className="category-chip">{category || "카테고리"}</span><h1>{title || "아티클 제목"}</h1><p>{summary || "한 줄 소개가 여기에 표시됩니다."}</p>{readingTime ? <small>읽는 데 약 {readingTime}분</small> : null}</div>{coverPreview ? <img className="cms-preview-cover" src={coverPreview} alt="대표 이미지" /> : null}<ArticleRenderer blocks={blocks} references={references.filter((reference) => reference.label.trim())} imageUrls={previewImageUrls} /></article></div></div> : null}
+    {pendingImport ? <div className="article-preview-overlay" role="dialog" aria-modal="true" aria-labelledby="replace-draft-title"><div className="replace-draft-dialog"><h2 id="replace-draft-title">현재 작성 중인 본문을 새 원고로 교체할까요?</h2><p>기존 본문 블록은 사라집니다.</p><div><button type="button" onClick={() => setPendingImport(null)}>취소</button><button type="button" className="replace" onClick={confirmImportedDraft}>교체하고 변환</button></div></div></div> : null}
   </>;
 }
