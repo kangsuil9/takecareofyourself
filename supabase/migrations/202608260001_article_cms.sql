@@ -2,7 +2,7 @@ begin;
 
 alter table public.articles
   add column content_blocks jsonb not null default '[]'::jsonb,
-  add column references jsonb not null default '[]'::jsonb;
+  add column reference_items jsonb not null default '[]'::jsonb;
 
 alter table public.articles
   alter column title set default '',
@@ -27,7 +27,7 @@ where content_blocks = '[]'::jsonb and char_length(btrim(content)) > 0;
 
 alter table public.articles
   add constraint articles_content_blocks_array_check check (jsonb_typeof(content_blocks) = 'array'),
-  add constraint articles_references_array_check check (jsonb_typeof(references) = 'array'),
+  add constraint articles_reference_items_array_check check (jsonb_typeof(reference_items) = 'array'),
   add constraint articles_published_required_fields_check check (
     status <> 'PUBLISHED'
     or (

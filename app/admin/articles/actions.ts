@@ -77,7 +77,7 @@ async function saveArticle(articleId: string | null, formData: FormData): Promis
   }
 
   const publishedAt = intent === "PUBLISHED" ? (existing?.status === "PUBLISHED" ? existing.published_at : new Date().toISOString()) : null;
-  const payload = { title, summary, category, reading_time: readingTime, cover_image_url: coverPath, content: "", content_blocks: storedBlocks as unknown as Json, references: parsedReferences.references as unknown as Json, status: intent, published_at: publishedAt };
+  const payload = { title, summary, category, reading_time: readingTime, cover_image_url: coverPath, content: "", content_blocks: storedBlocks as unknown as Json, reference_items: parsedReferences.references as unknown as Json, status: intent, published_at: publishedAt };
   const result = articleId
     ? await supabase.from("articles").update(payload).eq("id", articleId).select("id").maybeSingle()
     : await supabase.from("articles").insert(payload).select("id").maybeSingle();
