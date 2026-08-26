@@ -30,9 +30,9 @@ export type Database = {
         never
       >;
       articles: Table<
-        { id: string; title: string; category: string; summary: string; content: string; cover_image_url: string | null; reading_time: number | null; status: ArticleStatus; published_at: string | null; created_at: string; updated_at: string },
-        { id?: string; title: string; category: string; summary: string; content: string; cover_image_url?: string | null; reading_time?: number | null; status?: ArticleStatus; published_at?: string | null; created_at?: string; updated_at?: string },
-        { title?: string; category?: string; summary?: string; content?: string; cover_image_url?: string | null; reading_time?: number | null; status?: ArticleStatus; published_at?: string | null; updated_at?: string }
+        { id: string; title: string; category: string; summary: string; content: string; content_blocks: Json; references: Json; cover_image_url: string | null; reading_time: number | null; status: ArticleStatus; published_at: string | null; created_at: string; updated_at: string },
+        { id?: string; title?: string; category?: string; summary?: string; content?: string; content_blocks?: Json; references?: Json; cover_image_url?: string | null; reading_time?: number | null; status?: ArticleStatus; published_at?: string | null; created_at?: string; updated_at?: string },
+        { title?: string; category?: string; summary?: string; content?: string; content_blocks?: Json; references?: Json; cover_image_url?: string | null; reading_time?: number | null; status?: ArticleStatus; published_at?: string | null; updated_at?: string }
       >;
       push_subscriptions: Table<
         { id: string; user_id: string; endpoint: string; p256dh: string; auth: string; created_at: string; updated_at: string },
