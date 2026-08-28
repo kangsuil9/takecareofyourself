@@ -1,8 +1,8 @@
 import type { ArticleContentBlock, ArticleInlineSegment, ArticleReference } from "./cms.types.ts";
+import { ARTICLE_CONTENT_BLOCK_MAX_COUNT } from "./content.shared.ts";
 import { ARTICLE_IMAGE_MAX_COUNT } from "./images.shared.ts";
 
 const BLOCK_TYPES = new Set(["paragraph", "heading", "key_message", "callout", "image"]);
-const MAX_BLOCKS = 80;
 const MAX_TEXT = 5000;
 
 function parseSegments(value: unknown): ArticleInlineSegment[] | null {
@@ -20,7 +20,7 @@ function parseSegments(value: unknown): ArticleInlineSegment[] | null {
 export function parseArticleBlocks(raw: string): { success: true; blocks: ArticleContentBlock[] } | { success: false; error: string } {
   let value: unknown;
   try { value = JSON.parse(raw); } catch { return { success: false, error: "본문 구성을 확인해주세요." }; }
-  if (!Array.isArray(value) || value.length > MAX_BLOCKS) return { success: false, error: "본문 블록은 최대 80개까지 사용할 수 있어요." };
+  if (!Array.isArray(value) || value.length > ARTICLE_CONTENT_BLOCK_MAX_COUNT) return { success: false, error: `본문 블록은 최대 ${ARTICLE_CONTENT_BLOCK_MAX_COUNT}개까지 사용할 수 있어요.` };
   let imageCount = 0;
   const blocks: ArticleContentBlock[] = [];
   for (const candidate of value) {

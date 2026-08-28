@@ -1,0 +1,1 @@
+export const ARTICLE_CONTENT_BLOCK_MAX_COUNT = 150;

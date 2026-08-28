@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
+import { ARTICLE_CONTENT_BLOCK_MAX_COUNT } from "../lib/articles/content.shared.ts";
 import { parseArticleDraft, parseInlineBold } from "../lib/articles/import-draft.ts";
 import { hasUnlinkedArticleImage } from "../lib/articles/publishing.ts";
 import { parseArticleBlocks } from "../lib/articles/validation.ts";
@@ -15,6 +16,14 @@ test("일반 문단과 문단 내부 줄바꿈을 변환한다", () => {
   if (!result.success) return;
   assert.deepEqual(result.blocks.map((block) => block.type), ["paragraph", "paragraph"]);
   assert.equal(result.blocks[0].type === "paragraph" && result.blocks[0].segments[0].text, "첫 줄\n둘째 줄");
+});
+
+test("일반 줄바꿈은 같은 paragraph에 유지하고 빈 줄에서만 새 paragraph를 만든다", () => {
+  const result = parse("문장 A\n문장 B\n\n문장 C\n문장 D");
+  assert.equal(result.success, true);
+  if (!result.success) return;
+  assert.equal(result.blocks.length, 2);
+  assert.deepEqual(result.blocks.map((block) => block.type === "paragraph" ? block.segments.map((segment) => segment.text).join("") : ""), ["문장 A\n문장 B", "문장 C\n문장 D"]);
 });
 
 test("한 문단의 굵은 구절 하나와 여러 개를 segment로 보존한다", () => {
@@ -75,6 +84,45 @@ test("긴 원고의 혼합 블록과 bold를 안정적으로 변환한다", () =
   assert.deepEqual(result.blocks.map((block) => block.type), ["paragraph", "paragraph", "image", "heading", "paragraph", "key_message", "callout", "image"]);
   const paragraph = result.blocks[4];
   assert.equal(paragraph.type === "paragraph" && paragraph.segments.some((segment) => segment.bold && segment.text === "대사"), true);
+});
+
+test("80개를 넘는 운영용 장문도 150개 한도 안에서 client와 server가 동일하게 허용한다", () => {
+  const paragraphs = Array.from({ length: 90 }, (_, index) => `문단 ${index + 1} 첫 줄\n문단 ${index + 1} 둘째 줄`);
+  const source = [
+    ...paragraphs.slice(0, 20),
+    "## 수면과 회복",
+    ...paragraphs.slice(20, 45),
+    "### 문제는 한 번의 밤이 아니라\n### 비슷한 밤이 쌓이는 것입니다.",
+    "[이미지: 육퇴 후 거실]",
+    ...paragraphs.slice(45, 70),
+    "> 주말의 긴 잠이\n> 평일의 수면 부족을 모두 없애지는 않습니다.",
+    "[이미지: 인슐린 감수성]",
+    ...paragraphs.slice(70),
+    "[이미지: 밤 11시 침실]",
+  ].join("\n\n");
+  const result = parseArticleDraft(source, createId, 5, ARTICLE_CONTENT_BLOCK_MAX_COUNT);
+  assert.equal(result.success, true);
+  if (!result.success) return;
+  assert.deepEqual(result.blocks.reduce<Record<string, number>>((counts, block) => ({ ...counts, [block.type]: (counts[block.type] ?? 0) + 1 }), {}), {
+    paragraph: 90,
+    heading: 1,
+    key_message: 1,
+    image: 3,
+    callout: 1,
+  });
+  assert.equal(result.blocks.length, 96);
+  assert.equal(parseArticleBlocks(JSON.stringify(result.blocks)).success, true);
+});
+
+test("client parser와 server validation 모두 150개 초과를 차단한다", () => {
+  const source = Array.from({ length: ARTICLE_CONTENT_BLOCK_MAX_COUNT + 1 }, (_, index) => `문단 ${index + 1}`).join("\n\n");
+  const clientResult = parseArticleDraft(source, createId, 5, ARTICLE_CONTENT_BLOCK_MAX_COUNT);
+  assert.equal(clientResult.success, false);
+  if (!clientResult.success) assert.match(clientResult.error, /최대 150개/);
+  const blocks = Array.from({ length: ARTICLE_CONTENT_BLOCK_MAX_COUNT + 1 }, (_, index) => ({ id: `block-${index}`, type: "paragraph", segments: [{ text: `문단 ${index}` }] }));
+  const serverResult = parseArticleBlocks(JSON.stringify(blocks));
+  assert.equal(serverResult.success, false);
+  if (!serverResult.success) assert.match(serverResult.error, /최대 150개/);
 });
 
 test("placeholder image는 DRAFT 데이터로 유지되지만 PUBLISHED 연결 검증에는 걸린다", () => {

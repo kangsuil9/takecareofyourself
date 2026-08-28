@@ -1,4 +1,5 @@
 import type { ArticleContentBlock, ArticleInlineSegment } from "@/lib/articles/cms.types";
+import { ARTICLE_CONTENT_BLOCK_MAX_COUNT } from "./content.shared.ts";
 
 export type ArticleDraftImportResult =
   | { success: true; blocks: ArticleContentBlock[] }
@@ -18,7 +19,12 @@ export function parseInlineBold(text: string): ArticleInlineSegment[] {
   return segments.length ? segments : [{ text }];
 }
 
-export function parseArticleDraft(source: string, createId: () => string, maxImages: number): ArticleDraftImportResult {
+export function parseArticleDraft(
+  source: string,
+  createId: () => string,
+  maxImages: number,
+  maxBlocks = ARTICLE_CONTENT_BLOCK_MAX_COUNT,
+): ArticleDraftImportResult {
   if (!source.trim()) return { success: false, error: "변환할 원고를 입력해주세요." };
   const lines = source.replace(/\r\n?/g, "\n").split("\n");
   const blocks: ArticleContentBlock[] = [];
@@ -88,5 +94,6 @@ export function parseArticleDraft(source: string, createId: () => string, maxIma
   }
 
   flushParagraph();
+  if (blocks.length > maxBlocks) return { success: false, error: `본문 블록은 최대 ${maxBlocks}개까지 사용할 수 있어요.` };
   return { success: true, blocks };
 }

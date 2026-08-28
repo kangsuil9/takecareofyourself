@@ -5,6 +5,7 @@ import { useActionState, useRef, useState } from "react";
 import { ArrowDown, ArrowUp, Bold, Camera, ClipboardPaste, Eye, FileText, Heading2, ImagePlus, MessageSquareQuote, Plus, Trash2, X } from "lucide-react";
 import { ArticleRenderer } from "@/components/article-renderer";
 import type { ArticleContentBlock, ArticleFormState, ArticleReference } from "@/lib/articles/cms.types";
+import { ARTICLE_CONTENT_BLOCK_MAX_COUNT } from "@/lib/articles/content.shared";
 import { ARTICLE_IMAGE_ACCEPT, ARTICLE_IMAGE_MAX_BYTES, ARTICLE_IMAGE_MAX_COUNT } from "@/lib/articles/images.shared";
 import { parseArticleDraft } from "@/lib/articles/import-draft";
 import type { ArticleStatus } from "@/lib/supabase/database.types";
@@ -63,6 +64,7 @@ export function ArticleEditor({ action, heading, articleId, initial, imageUrls =
   }
 
   function addBlock(type: ArticleContentBlock['type']) {
+    if (blocks.length >= ARTICLE_CONTENT_BLOCK_MAX_COUNT) { setImageError(`본문 블록은 최대 ${ARTICLE_CONTENT_BLOCK_MAX_COUNT}개까지 사용할 수 있어요.`); return; }
     if (type === "image") {
       if (blocks.filter((block) => block.type === "image").length >= ARTICLE_IMAGE_MAX_COUNT) { setImageError(`본문 이미지는 최대 ${ARTICLE_IMAGE_MAX_COUNT}장까지 사용할 수 있어요.`); return; }
       setBlocks((current) => [...current, { id: createId(), type: "image", uploadKey: createId(), alt: "", description: "" }]);
@@ -130,7 +132,7 @@ export function ArticleEditor({ action, heading, articleId, initial, imageUrls =
   }
 
   function convertImportedDraft() {
-    const result = parseArticleDraft(importSource, createId, ARTICLE_IMAGE_MAX_COUNT);
+    const result = parseArticleDraft(importSource, createId, ARTICLE_IMAGE_MAX_COUNT, ARTICLE_CONTENT_BLOCK_MAX_COUNT);
     if (!result.success) { setImportError(result.error); return; }
     setImportError(null);
     if (blocks.length) { setPendingImport(result.blocks); return; }
