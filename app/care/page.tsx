@@ -4,6 +4,7 @@ import { AppShell } from "@/components/app-shell";
 import { CareLogActions } from "@/components/care-log-actions";
 import { CareLogImage } from "@/components/care-log-image";
 import { CareLikeButton } from "@/components/care-like-button";
+import { getLatestPublishedArticle } from "@/lib/articles/public";
 import { createCareImageSignedUrl } from "@/lib/care-logs/images";
 import { requireCareLogOwner } from "@/lib/care-logs/server";
 import { createClient } from "@/lib/supabase/server";
@@ -30,7 +31,10 @@ function getFeedback(params: Awaited<Props["searchParams"]>) {
 export default async function CarePage({ searchParams }: Props) {
   const [profile, params] = await Promise.all([requireCareLogOwner(), searchParams]);
   const supabase = await createClient();
-  const { data: careLogs, error } = await supabase.from("care_logs").select("id, user_id, category, content, image_url, created_at, updated_at").is("deleted_at", null).order("created_at", { ascending: false });
+  const [{ data: careLogs, error }, latestArticle] = await Promise.all([
+    supabase.from("care_logs").select("id, user_id, category, content, image_url, created_at, updated_at").is("deleted_at", null).order("created_at", { ascending: false }),
+    getLatestPublishedArticle(),
+  ]);
   const profileIds = [...new Set((careLogs ?? []).map((careLog) => careLog.user_id))];
   const careLogIds = (careLogs ?? []).map((careLog) => careLog.id);
   const { data: feedProfiles } = profileIds.length ? await supabase.rpc("get_feed_profiles", { profile_ids: profileIds }) : { data: [] };
@@ -49,14 +53,14 @@ export default async function CarePage({ searchParams }: Props) {
     <AppShell>
       <header className="brand-header"><div><span className="eyebrow">TAKE CARE OF YOURSELF</span><h1>돌봄</h1></div><div className="brand-mark" aria-hidden="true"><span /></div></header>
       {feedback ? <div className={params.error ? "care-feedback error" : "care-feedback"} role="status">{feedback}</div> : null}
-      <section className="knowledge-section" aria-labelledby="knowledge-title">
+      {latestArticle ? <section className="knowledge-section" aria-labelledby="knowledge-title">
         <span className="eyebrow">CARE KNOWLEDGE</span><h2 id="knowledge-title">건강지식</h2>
-        <Link href="/care/articles/restful-sleep?from=care" className="knowledge-compact-card">
-          <div className="knowledge-thumbnail" aria-hidden="true"><span /><i /></div>
-          <div><span className="knowledge-meta">수면 · 읽는 데 5분</span><h3>잠을 줄여 만든 나만의 시간은 정말 나를 위한 시간일까요?</h3></div>
+        <Link href={`/care/articles/${latestArticle.id}?from=care`} className="knowledge-compact-card">
+          {latestArticle.coverImageUrl ? <img className="knowledge-thumbnail-image" src={latestArticle.coverImageUrl} alt="" /> : <div className="knowledge-thumbnail" aria-hidden="true"><span /><i /></div>}
+          <div><span className="knowledge-meta">{latestArticle.category}{latestArticle.readingTime ? ` · 읽는 데 ${latestArticle.readingTime}분` : ""}</span><h3>{latestArticle.title}</h3></div>
         </Link>
         <Link href="/care/articles" className="knowledge-more-link">건강지식 더보기 <ArrowRight size={15} aria-hidden="true" /></Link>
-      </section>
+      </section> : null}
       <section className="intro-section"><p>사람들은 자신을<br />이렇게 돌보고 있습니다.</p></section>
       <section className="feed-section" aria-labelledby="care-feed-title">
         <div className="section-heading"><div><span className="eyebrow">OUR MOMENTS</span><h2 id="care-feed-title">오늘의 돌봄</h2></div><span className="muted-label">최신순</span></div>

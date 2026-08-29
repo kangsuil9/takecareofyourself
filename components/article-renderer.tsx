@@ -20,6 +20,6 @@ export function ArticleRenderer({ blocks, references = [], imageUrls = {} }: { b
       if (block.type === "callout") return <blockquote key={block.id}><InlineText segments={block.segments} /></blockquote>;
       return <p key={block.id}><InlineText segments={block.segments} /></p>;
     })}
-    {references.length ? <section className="article-references" aria-labelledby="article-references-title"><h2 id="article-references-title">참고자료</h2><ol>{references.map((reference) => { const href = safeExternalUrl(reference.url); return <li key={reference.id}>{href ? <a href={href} target="_blank" rel="noreferrer">{reference.label}</a> : reference.label}</li>; })}</ol></section> : null}
+    {references.length ? <section className="article-references" aria-labelledby="article-references-title"><h2 id="article-references-title">참고한 자료</h2><ol>{references.map((reference) => { const href = safeExternalUrl(reference.url); return <li key={reference.id}>{href ? <a href={href} target="_blank" rel="noopener noreferrer">{reference.label}</a> : reference.label}</li>; })}</ol></section> : null}
   </div>;
 }
